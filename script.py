@@ -1,73 +1,72 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 import time
 
 # Initialisation du driver
 driver = webdriver.Chrome()
 
 # Ouverture de la page
-driver.get("http://127.0.0.1:5500/index.html")
+driver.get("http://127.0.0.1:5500/index.html")  # Remplacez cette URL par celle de votre page locale ou en ligne
 
-# Attente que l'élément "tetris" soit visible
-wait = WebDriverWait(driver, 10)
+# Attente que l'élément "tetris" (bouton ou modal) soit visible
+wait = WebDriverWait(driver, 40)
 element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "tetris")))
 
 print("✅ tetris trouvé")
 
-# Attendre que le bouton soit visible et cliquable
-tetris_button = wait.until(EC.presence_of_element_located((By.ID, "tetrisButton")))
+# Attendre que le bouton pour démarrer le jeu soit visible et cliquable
+tetris_button = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "tetris")))
 print("✅ bouton tetris trouvé")
-# Vérifier que le bouton est bien affiché
-assert tetris_button.is_displayed(), "❌ Le bouton n'est pas visible !"
 
-# Simuler un clic avec ActionChains
-actions = ActionChains(driver)
-actions.move_to_element(tetris_button).click().perform()
+# Simuler un clic avec ActionChains pour démarrer le jeu
+tetris_button.click()
 
 print("✅ Le bouton pour ouvrir tetris a été cliqué")
 
+# Attendre que la modal du jeu soit visible
+modal_left = wait.until(EC.presence_of_element_located((By.ID, "modal-left")))
+
+# Vérifier que la modal est bien dans le DOM et visible
+assert modal_left.is_displayed(), "❌ La modal ne s'est pas ouverte !"
+print("✅ La modal est ouverte avec succès")
+
+# Attendre que le contenu du jeu (canvas) soit visible dans la modal
+canvas = wait.until(EC.presence_of_element_located((By.ID, "tetris")))
+
+assert canvas.is_displayed(), "❌ Canvas du jeu Tetris non trouvé !"
+print("✅ Canvas trouvé et visible")
+
+
+#Attendre que le jeu marche 3 seconde avant de tester
 time.sleep(3)
 
-# Vérifier que la modal est bien affichée
-modal_left = wait.until(EC.presence_of_element_located((By.ID, "modal-left")))
-driver.execute_script("document.getElementById('modal-left').style.visibility = 'visible';")
-html = driver.page_source
-if "modal-left" in html:
-    print("✅ La modal est bien dans le DOM mais peut-être cachée")
-else:
-    print("❌ La modal n'est pas présente dans le DOM")
+# Simuler des touches du clavier pour déplacer les pièces de Tetris
+canvas.click()
 
+actions = ActionChains(driver)
 
-assert modal_left.is_displayed(), "❌ La modal ne s'est pas ouverte !"
-print("✅ Le modal est ouvert avec succès")
-modal = modal_left.get_attribute("innerHTML")
+# Simuler la flèche vers la gauche (déplacement vers la gauche)
+actions.send_keys(Keys.ARROW_LEFT).perform()
+time.sleep(1)  
 
-# Afficher le contenu
-print("📌 Contenu de la modale :\n", modal)
+# Simuler la flèche vers la droite (déplacement vers la droite)
+actions.send_keys(Keys.ARROW_RIGHT).perform()
+time.sleep(1)
 
-#Afficher modalContent
+# Simuler la flèche vers le bas (accélérer la descente)
+actions.send_keys(Keys.ARROW_DOWN).perform()
+time.sleep(1)
 
-# Attendre que la modale s'affiche
-wait.until(lambda d: "show" in d.find_element(By.ID, "modal-left").get_attribute("class"))
-print("✅ La modale est visible")
+# Simuler la flèche vers le haut (rotation de la pièce)
+actions.send_keys(Keys.ARROW_UP).perform()
+time.sleep(1)
 
-# Attendre que modal-content soit rempli
-wait.until(lambda d: d.find_element(By.ID, "modal-content").get_attribute("innerHTML").strip() != "")
-print("✅ `modal-content` a été rempli avec succès.")
-
-# Récupérer et afficher le contenu HTML de la modale
-modal_content_html = driver.find_element(By.ID, "modal-content").get_attribute("innerHTML")
-print("📌 Contenu de modal-content :\n", modal_content_html)
-
-# Vérifier si un canvas est présent
-canvas = driver.find_elements(By.TAG_NAME, "canvas")
-if canvas:
-    print("✅ Un canvas a bien été détecté dans la modale !")
-else:
-    print("❌ Aucun canvas trouvé dans modal-content.")
+# Attendre un peu pour voir le résultat dans la modal
+time.sleep(5)
 
 # Fermer le navigateur après le test
 driver.quit()
