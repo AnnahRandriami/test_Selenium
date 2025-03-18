@@ -10,7 +10,9 @@ import time
 driver = webdriver.Chrome()
 
 # Ouverture de la page
-driver.get("http://127.0.0.1:5500/index.html")  # Remplacez cette URL par celle de votre page locale ou en ligne
+driver.get("http://127.0.0.1:5500/index.html") 
+
+driver.maximize_window() 
 
 # Attente que l'élément "tetris" (bouton ou modal) soit visible
 wait = WebDriverWait(driver, 40)
