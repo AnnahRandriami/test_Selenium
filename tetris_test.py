@@ -10,10 +10,10 @@ import time
 driver = webdriver.Chrome()
 
 # Ouverture de la page
-driver.get("http://127.0.0.1:5500/index.html") 
+driver.get("https://annahrandriami.github.io/Mon_portfolio/index.html") 
 
 driver.maximize_window() 
-
+time.sleep(10)
 # Attente que l'élément "tetris" (bouton ou modal) soit visible
 wait = WebDriverWait(driver, 40)
 element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "tetris")))
