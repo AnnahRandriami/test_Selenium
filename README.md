@@ -1,1 +1,1 @@
-Test automatisé fonctionnel du jeu tetris dans mon portfolio.
+Test automatisé des fonctionalité dans mon portfolio.
