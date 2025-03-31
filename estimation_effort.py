@@ -72,7 +72,6 @@ champ_currentEffort.clear()
 champ_test.send_keys("100000") 
 
 
-
 # Calculer le ratio avec des valeurs incorrectes
 ratio_button = WebDriverWait(driver, 10).until(
     EC.element_to_be_clickable((By.XPATH, "//button[@onclick='calculateRatio()']"))
@@ -98,11 +97,8 @@ print("📢 Résultat affiché sur la page :", result_text)
 
 # Cellule vide
 champ_dev.clear()
-champ_dev.send_keys("")  # Valeur invalide
 champ_test.clear()
-champ_test.send_keys("tetete")  # Valeur invalide
 champ_currentEffort.clear()
-champ_test.send_keys("") 
 # Calculer le ratio avec des valeurs incorrectes
 
 ratio_button = WebDriverWait(driver, 10).until(
