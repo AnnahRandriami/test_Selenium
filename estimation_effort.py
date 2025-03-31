@@ -5,123 +5,49 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
-# Initialisation du driver
-driver = webdriver.Chrome()
+def init_driver():
+    driver = webdriver.Chrome()
+    driver.get("http://127.0.0.1:5500/index.html")
+    driver.maximize_window()
+    return driver, WebDriverWait(driver, 10)
 
-# Ouverture de la page
-driver.get("http://127.0.0.1:5500/index.html") 
+def click_element(wait, by, value, info):
+    element = wait.until(EC.element_to_be_clickable((by, value)))
+    element.click()
+    print(f"[INFO] {info}")
 
-driver.maximize_window() 
+def fill_input(driver, element_id, value):
+    field = driver.find_element(By.ID, element_id)
+    field.clear()
+    field.send_keys(value)
+
+def process_estimation(driver, wait, dev_effort, test_effort, current_dev_effort):
+    fill_input(driver, "dev_effort", dev_effort)
+    fill_input(driver, "test_effort", test_effort)
+    fill_input(driver, "current_dev_effort", current_dev_effort)
+    
+    click_element(wait, By.XPATH, "//button[@onclick='calculateRatio()']", "Bouton calcul de ratio cliqué avec succès !")
+    click_element(wait, By.XPATH, "//button[@onclick='calculateTestEffortForCurrentProject()']", "Bouton calcul de l'effort de test cliqué avec succès !")
+    
+    wait.until(EC.presence_of_element_located((By.ID, "result")))
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    result_text = driver.find_element(By.ID, "result").text
+    print(f"[INFO] Résultat affiché sur la page : {result_text}")
+
+driver, wait = init_driver()
+click_element(wait, By.CLASS_NAME, "calcul", "Bouton estimation de test cliqué")
+Select(driver.find_element(By.ID, "method")).select_by_value("ratio")
+print("[INFO] L'option ratio a été sélectionnée")
 time.sleep(3)
 
-# Attente que l'élément "calcul" (bouton ou modal) soit visible
-wait = WebDriverWait(driver, 10)
-element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "calcul")))
-print("✅ Bouton estimation de test trouvé")
+# Tests avec différentes entrées
+scenarios = [
+    ("10", "15", "12"),  # valeurs valides
+    ("-10", "tetete", "100000"),  # valeurs invalides
+    ("", "", "")  # cellules vides
+]
 
-# Attendre que le bouton pour démarrer l'estimation soit visible et cliquable
-estimation_button = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "calcul")))
-print("✅ Bouton estimation de rapport de test cliqué")
-
-estimation_button.click()
-print("✅ Le bouton pour ouvrir l'estimation a été cliqué")
-
-# Choisir estimation par ratio
-dropdown = Select(driver.find_element(By.ID, "method"))
-dropdown.select_by_value("ratio")
-time.sleep(3)
-print("✅ L'option ratio a été sélectionnée")
-
-# Remplir les cases avec des valeurs valides
-champ_dev = driver.find_element(By.ID, "dev_effort")
-champ_dev.send_keys("10")
-champ_test = driver.find_element(By.ID, "test_effort")
-champ_test.send_keys("15")
-champ_currentEffort = driver.find_element(By.ID, "current_dev_effort")
-champ_currentEffort.send_keys(12)
-
-# Calculer le ratio
-ratio_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, "//button[@onclick='calculateRatio()']"))
-    )
-ratio_button.click()
-print("✅ Bouton cliqué avec succès !")
-
-# Calculer de l'effort du projet actuel
-current_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, "//button[@onclick='calculateTestEffortForCurrentProject()']"))
-    )
-current_button.click()
-print("✅ Bouton cliqué avec succès !")
-
-# Attendre l'affichage du résultat
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "result")))
-
-# Afficher le résultat
-driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-result_element = driver.find_element(By.ID, "result")
-result_text = result_element.text
-print("📢 Résultat affiché sur la page :", result_text)
-
-# Insérer des valeurs incorrectes
-champ_dev.clear()
-champ_dev.send_keys("-10") 
-champ_test.clear()
-champ_test.send_keys("tetete") 
-champ_currentEffort.clear()
-champ_test.send_keys("100000") 
-
-
-# Calculer le ratio avec des valeurs incorrectes
-ratio_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, "//button[@onclick='calculateRatio()']"))
-    )
-ratio_button.click()
-print("✅ Bouton cliqué avec succès !")
-
-# Calculer de l'effort du projet actuel
-current_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, "//button[@onclick='calculateTestEffortForCurrentProject()']"))
-    )
-current_button.click()
-print("✅ Bouton cliqué avec succès !")
-
-# Attendre l'affichage du résultat pour les valeurs incorrectes
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "result")))
-
-# Afficher le résultat
-driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-result_element = driver.find_element(By.ID, "result")
-result_text = result_element.text
-print("📢 Résultat affiché sur la page :", result_text)
-
-# Cellule vide
-champ_dev.clear()
-champ_test.clear()
-champ_currentEffort.clear()
-# Calculer le ratio avec des valeurs incorrectes
-
-ratio_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, "//button[@onclick='calculateRatio()']"))
-    )
-ratio_button.click()
-print("✅ Bouton cliqué avec succès !")
-
-# Calculer de l'effort du projet actuel
-current_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, "//button[@onclick='calculateTestEffortForCurrentProject()']"))
-    )
-current_button.click()
-print("✅ Bouton cliqué avec succès !")
-# Attendre l'affichage du résultat pour les valeurs incorrectes
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "result")))
-
-# Afficher le résultat
-driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-result_element = driver.find_element(By.ID, "result")
-result_text = result_element.text
-print("📢 Résultat affiché sur la page :", result_text)
-# Fermer le navigateur
-
+for dev, test, current in scenarios:
+    process_estimation(driver, wait, dev, test, current)
 
 driver.quit()
