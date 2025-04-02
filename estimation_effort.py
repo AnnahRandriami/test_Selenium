@@ -12,32 +12,55 @@ def init_driver():
     return driver, WebDriverWait(driver, 10)
 
 def click_element(wait, by, value, info):
-    element = wait.until(EC.element_to_be_clickable((by, value)))
-    element.click()
-    print(f"[INFO] {info}")
+    try:
+        element = wait.until(EC.element_to_be_clickable((by, value)))
+        element.click()
+        print(f"[INFO] {info}")
+    except Exception as e:
+        print(f"[ERREUR] Impossible de cliquer sur {info} - {str(e)}")
 
 def fill_input(driver, element_id, value):
-    field = driver.find_element(By.ID, element_id)
-    field.clear()
-    field.send_keys(value)
+    try:
+        field = driver.find_element(By.ID, element_id)
+        field.clear()
+        field.send_keys(value)
+    except Exception as e:
+        print(f"[ERREUR] Impossible de remplir {element_id} - {str(e)}")
 
 def process_estimation(driver, wait, dev_effort, test_effort, current_dev_effort):
     fill_input(driver, "dev_effort", dev_effort)
     fill_input(driver, "test_effort", test_effort)
+
+    click_element(wait, By.XPATH, "//button[@onclick='calculateRatio()']", "Calcul de ratio effectué")
+
+    try:
+        wait.until(EC.presence_of_element_located((By.ID, "result")))
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        result_ratio = driver.find_element(By.ID, "result").text.strip()
+        if result_ratio:
+            print(f"[RESULTAT] Ratio calculé : {result_ratio}")
+        else:
+            print("[INFO] Aucun ratio affiché.")
+    except Exception as e:
+        print(f"[ERREUR] Échec du chargement du ratio - {str(e)}")
+        return  # Arrête l'exécution si le ratio ne peut pas être calculé
+
     fill_input(driver, "current_dev_effort", current_dev_effort)
-    
-    click_element(wait, By.XPATH, "//button[@onclick='calculateRatio()']", "Bouton calcul de ratio cliqué avec succès !")
-    click_element(wait, By.XPATH, "//button[@onclick='calculateTestEffortForCurrentProject()']", "Bouton calcul de l'effort de test cliqué avec succès !")
-    
-    wait.until(EC.presence_of_element_located((By.ID, "result")))
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    result_text = driver.find_element(By.ID, "result").text
-    print(f"[INFO] Résultat affiché sur la page : {result_text}")
+    click_element(wait, By.XPATH, "//button[@onclick='calculateTestEffortForCurrentProject()']", "Calcul de l'effort de test effectué")
+
+    try:
+        wait.until(EC.presence_of_element_located((By.ID, "current_test_effort_result")))
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        result_effort = driver.find_element(By.ID, "current_test_effort_result").text.strip()
+        if result_effort:  # Vérifie si la valeur n'est pas vide
+            print(f"[RESULTAT] Effort de test calculé : {result_effort}")
+    except Exception as e:
+        print(f"[ERREUR] Échec du chargement de l'effort de test - {str(e)}")
 
 driver, wait = init_driver()
-click_element(wait, By.CLASS_NAME, "calcul", "Bouton estimation de test cliqué")
+click_element(wait, By.CLASS_NAME, "calcul", "Bouton estimation de test")
 Select(driver.find_element(By.ID, "method")).select_by_value("ratio")
-print("[INFO] L'option ratio a été sélectionnée")
+print("[INFO] L'option estimation par ratio a été sélectionnée")
 time.sleep(3)
 
 # Tests avec différentes entrées
